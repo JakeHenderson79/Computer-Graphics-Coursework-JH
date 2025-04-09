@@ -100,29 +100,22 @@ int main( void )
 
     // Load models
     Model sphere("../assets/sphere.obj");
-    Model wall("../assets/plane.obj");
+    //Model wall("../assets/plane.obj");
     Model floor("../assets/plane.obj");
 
-    // Load the textures
-    wall.addTexture("../assets/bricks_diffuse.png", "diffuse");
+    //// Load the textures
+    //wall.addTexture("../assets/bricks_diffuse.png", "diffuse");
 
-
-    // Define wall object lighting properties
-    wall.ka = 0.2f;
-    wall.kd = 1.0f;
-    wall.ks = 1.0f;
-    wall.Ns = 20.0f;
-
-
+    //// Define wall object lighting properties
+    //wall.ka = 0.2f;
+    //wall.kd = 1.0f;
+    //wall.ks = 1.0f;
+    //wall.Ns = 20.0f;
 
     // Add light sources
     Light lightSources;
     lightSources.addDirectionalLight(glm::vec3(1.0f, -1.0f, 0.0f),  // direction
         glm::vec3(1.0f, 1.0f, 0.0f));  // colour
-
-
-
- 
 
     std::vector<Object> objects;
     Object object;
