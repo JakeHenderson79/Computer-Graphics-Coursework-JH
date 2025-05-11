@@ -16,7 +16,7 @@ out vec3 tangentSpaceLightPosition[maxLights];
 out vec3 tangentSpaceLightDirection[maxLights];
 
 // Light struct
-struct Light
+struct Light 
 {
     vec3 position;
     vec3 colour;
@@ -26,6 +26,7 @@ struct Light
     float quadratic;
     float cosPhi;
     int type;
+
 };
 
 // Uniforms

@@ -35,18 +35,18 @@ struct Object
 int main( void )
 {
     // =========================================================================
-    // Window creation - you shouldn't need to change this code
-    // -------------------------------------------------------------------------
-    // Initialise GLFW
-    if( !glfwInit() )
+   // Window creation - you shouldn't need to change this code
+   // -------------------------------------------------------------------------
+   // Initialise GLFW
+    if (!glfwInit())
     {
-        fprintf( stderr, "Failed to initialize GLFW\n" );
+        fprintf(stderr, "Failed to initialize GLFW\n");
         getchar();
         return -1;
     }
 
     glfwWindowHint(GLFW_SAMPLES, 4);
-    glfwWindowHint(GLFW_RESIZABLE,GL_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -55,8 +55,8 @@ int main( void )
     // Open a window and create its OpenGL context
     GLFWwindow* window;
     window = glfwCreateWindow(1024, 768, "Computer Graphics Coursework", NULL, NULL);
-    
-    if( window == NULL ){
+
+    if (window == NULL) {
         fprintf(stderr, "Failed to open GLFW window.\n");
         getchar();
         glfwTerminate();
@@ -75,8 +75,8 @@ int main( void )
     // -------------------------------------------------------------------------
     // End of window creation
     // =========================================================================
-    
-     // Enable depth test
+
+    // Enable depth test
     glEnable(GL_DEPTH_TEST);
 
     // Use back face culling
@@ -99,31 +99,39 @@ int main( void )
     glUseProgram(shaderID);
 
     // Load models
+    Model cube("../assets/cube.obj");
     Model sphere("../assets/sphere.obj");
-    //Model wall("../assets/plane.obj");
+    Model wall("../assets/plane.obj");
+    Model wallFlipped("../assets/plane.obj");
     Model floor("../assets/plane.obj");
 
-    //// Load the textures
-    //wall.addTexture("../assets/bricks_diffuse.png", "diffuse");
+    // Load the textures
+    cube.addTexture("../assets/crate.jpg", "diffuse");
 
-    //// Define wall object lighting properties
-    //wall.ka = 0.2f;
-    //wall.kd = 1.0f;
-    //wall.ks = 1.0f;
-    //wall.Ns = 20.0f;
+    // Load the textures
+    wall.addTexture("../assets/bricks_diffuse.png", "diffuse");
+    wall.addTexture("../assets/bricks_normal.png", "normal");
+    wall.addTexture("../assets/bricks_specular.png", "specular");
 
-    // Add light sources
-    Light lightSources;
-    lightSources.addDirectionalLight(glm::vec3(1.0f, -1.0f, 0.0f),  // direction
-        glm::vec3(1.0f, 1.0f, 0.0f));  // colour
-
-    std::vector<Object> objects;
-    Object object;
-
+    wallFlipped.addTexture("../assets/bricks_diffuse - Copy.png", "diffuse");
+    wallFlipped.addTexture("../assets/bricks_normal - Copy.png", "normal");
+    wallFlipped.addTexture("../assets/bricks_specular - Copy.png", "specular");
 
     floor.addTexture("../assets/stones_diffuse.png", "diffuse");
     floor.addTexture("../assets/stones_normal.png", "normal");
     floor.addTexture("../assets/stones_specular.png", "specular");
+
+    // Define wall object lighting properties
+    wall.ka = 0.2f;
+    wall.kd = 1.0f;
+    wall.ks = 1.0f;
+    wall.Ns = 20.0f;
+
+    // Define wall object lighting properties
+    wallFlipped.ka = 0.2f;
+    wallFlipped.kd = 1.0f;
+    wallFlipped.ks = 1.0f;
+    wallFlipped.Ns = 20.0f;
 
     // Define floor object lighting properties
     floor.ka = 0.2f;
@@ -131,22 +139,93 @@ int main( void )
     floor.ks = 1.0f;
     floor.Ns = 20.0f;
 
+
+    // Define cube object lighting properties
+    cube.ka = 1.0f;
+    cube.kd = 0.0f;
+    cube.ks = 0.0f;
+    cube.Ns = 20.0f;
+
+    // Add light sources
+    Light lightSources;
+    lightSources.addDirectionalLight(glm::vec3(1.0f, -1.0f, 0.0f),  // direction
+        glm::vec3(1.0f, 1.0f, 0.0f));  // colour
+
+    // Cube positions
+    glm::vec3 positions[] = {
+        glm::vec3(0.0f,  0.0f,  0.0f),
+        glm::vec3(2.0f,  5.0f, -10.0f),
+        glm::vec3(-3.0f, -2.0f, -3.0f),
+        glm::vec3(-4.0f, -2.0f, -8.0f),
+        glm::vec3(2.0f,  2.0f, -6.0f),
+        glm::vec3(-4.0f,  3.0f, -8.0f),
+        glm::vec3(0.0f, -2.0f, -5.0f),
+        glm::vec3(4.0f,  2.0f, -4.0f),
+        glm::vec3(2.0f,  0.0f, -2.0f),
+        glm::vec3(-1.0f,  1.0f, -2.0f)
+    };
+
     //Wall/Floor Positions
     glm::vec3 wallPositions[] = {
         glm::vec3(0.0f, -0.85f, 0.0f),
-        glm::vec3(5.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, -5.0f),
         glm::vec3(-5.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 0.0f, 5.0f),
-        glm::vec3(0.0f, 0.0f, -5.0f)
+        glm::vec3(5.0f, 0.0f, 0.0f)
+    };
+    glm::vec3 wallRotation[] = {
+     glm::vec3(1.0f, 1.0f, 1.0f),
+     glm::vec3(1.0f, 0.0f, 0.0f),
+     glm::vec3(1.0f, 1.0f, 0.0f),
+     glm::vec3(1.0f, 0.0f, 0.0f),
+     glm::vec3(1.0f, -1.0f, 0.0f)
+    };
+    float wallAngles[] = {
+        0.0f,
+        90.0f,
+        180.0f,
+        -90.0f,
+        -180.0f
     };
 
+    // Add teapots to objects vector
+    std::vector<Object> objects;
+    Object object;
+    object.name = "cube";
+    for (unsigned int i = 0; i < 10; i++)
+    {
+        object.position = positions[i];
+        object.rotation = glm::vec3(1.0f, 1.0f, 1.0f);
+        object.scale = glm::vec3(0.5f, 0.5f, 0.5f);
+        object.angle = Maths::radians(20.0f * i);
+        objects.push_back(object);
+    }
     object.name = "floor";
     object.position = wallPositions[0];
-    object.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+    object.rotation = wallRotation[0];
     object.scale = glm::vec3(0.5f, 0.5f, 0.5f);
-    object.angle = 0.0f;
+    object.angle = wallAngles[0];
     objects.push_back(object);
-
+   
+    //object.name = "wall";
+    bool isFlipped = false;
+    for (unsigned int i = 1; i <= wallPositions->length() + 1; i++) {
+        if (isFlipped) {
+            isFlipped = false;
+            object.name = "wallFlipped";
+        }
+        else {
+            isFlipped = true;
+            object.name = "wall";
+        }
+        
+        object.position = wallPositions[i];
+        object.rotation = wallRotation[i];
+        object.scale = glm::vec3(0.5f, 0.5f, 0.5f);
+        object.angle = Maths::radians(wallAngles[i]);
+        objects.push_back(object);
+        std::cout << i ;
+    }
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -192,8 +271,15 @@ int main( void )
             glUniformMatrix4fv(glGetUniformLocation(shaderID, "MV"), 1, GL_FALSE, &MV[0][0]);
 
             // Draw the model
+            if (objects[i].name == "cube")
+                cube.draw(shaderID);
+            if (objects[i].name == "wall")
+                wall.draw(shaderID);
+            if (objects[i].name == "wallFlipped")
+                wallFlipped.draw(shaderID);
             if (objects[i].name == "floor")
                 floor.draw(shaderID);
+            
         }
 
         // Draw light sources
@@ -205,7 +291,7 @@ int main( void )
     }
 
     // Cleanup
-    floor.deleteBuffers();
+    cube.deleteBuffers();
     glDeleteProgram(shaderID);
 
     // Close OpenGL window and terminate GLFW
