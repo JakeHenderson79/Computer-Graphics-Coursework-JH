@@ -14,10 +14,10 @@ void Light::addPointLight(const glm::vec3 position, const glm::vec3 colour,
     lightSources.push_back(light);
 }
 
-void Light::addSpotLight(const glm::vec3 position, const glm::vec3 direction,
+void Light::addSpotLight( glm::vec3 position,  glm::vec3 direction,
     const glm::vec3 colour, const float constant,
     const float linear, const float quadratic,
-    const float cosPhi)
+    const float cosPhi, bool isPlayer)
 {
     LightSource light;
     light.position = position;
@@ -28,6 +28,7 @@ void Light::addSpotLight(const glm::vec3 position, const glm::vec3 direction,
     light.quadratic = quadratic;
     light.cosPhi = cosPhi;
     light.type = 2;
+    light.isPlayer = isPlayer;
     lightSources.push_back(light);
 }
 
@@ -40,7 +41,7 @@ void Light::addDirectionalLight(const glm::vec3 direction, const glm::vec3 colou
     lightSources.push_back(light);
 }
 
-void Light::toShader(unsigned int shaderID, glm::mat4 view)
+void Light::toShader(unsigned int shaderID, glm::mat4 view, Camera camera)
 {
     unsigned int numLights = static_cast<unsigned int>(lightSources.size());
     glUniform1i(glGetUniformLocation(shaderID, "numLights"), numLights);
@@ -48,6 +49,15 @@ void Light::toShader(unsigned int shaderID, glm::mat4 view)
     for (unsigned int i = 0; i < numLights; i++)
     {
         std::string idx = std::to_string(i);
+        if (lightSources[i].isPlayer) {
+            lightSources[i].position = camera.eye;
+            lightSources[i].direction = camera.front;
+            if (isOn) 
+                lightSources[i].colour = onColour;
+            else
+                lightSources[i].colour = offColour;
+        }
+
         glm::vec3 VSLightPosition = glm::vec3(view * glm::vec4(lightSources[i].position, 1.0f));
         glm::vec3 VSLightDirection = glm::vec3(view * glm::vec4(lightSources[i].direction, 0.0f));
         glUniform3fv(glGetUniformLocation(shaderID, ("lightSources[" + idx + "].position").c_str()), 1, &VSLightPosition[0]);
@@ -84,6 +94,20 @@ void Light::draw(unsigned int shaderID, glm::mat4 view, glm::mat4 projection, Mo
 
         // Draw light source
         lightModel.draw(shaderID);
+    }
+}
+
+void Light::updateLight(glm::vec3 position, glm::vec3 rotation, Camera camera, unsigned int shaderID, Model lightModel)
+{
+    for each(LightSource lightSource in lightSources)
+    {
+        if (lightSource.isPlayer) {
+            lightSource.position = position;
+            lightSource.direction = rotation;
+          /*  std::cout << "In procedure";
+            std::cout << lightSource.position;
+            std::cout << "\n";*/
+        }
     }
 }
 

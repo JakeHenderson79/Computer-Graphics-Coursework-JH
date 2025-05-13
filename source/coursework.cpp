@@ -12,7 +12,7 @@
 #include <common/light.hpp>
 
 // Function prototypes
-void keyboardInput(GLFWwindow* window);
+void keyboardInput(GLFWwindow* window, Light& lightSource);
 void mouseInput(GLFWwindow* window);
 
 // Frame timers
@@ -21,6 +21,9 @@ float deltaTime = 0.0f;  // time elapsed since the previous frame
 
 // Create camera object
 Camera camera(glm::vec3(0.0f, 0.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+
+bool isJumping, goDown, isTurning;
+float t, timer;
 
 // Object struct
 struct Object
@@ -121,35 +124,47 @@ int main( void )
     floor.addTexture("../assets/stones_normal.png", "normal");
     floor.addTexture("../assets/stones_specular.png", "specular");
 
+    // Use wireframe rendering (comment out to turn off)
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
     // Define wall object lighting properties
     wall.ka = 0.2f;
-    wall.kd = 1.0f;
+    wall.kd = 0.7f;
     wall.ks = 1.0f;
     wall.Ns = 20.0f;
 
     // Define wall object lighting properties
     wallFlipped.ka = 0.2f;
-    wallFlipped.kd = 1.0f;
+    wallFlipped.kd = 0.7f;
     wallFlipped.ks = 1.0f;
     wallFlipped.Ns = 20.0f;
 
     // Define floor object lighting properties
     floor.ka = 0.2f;
-    floor.kd = 1.0f;
+    floor.kd = 0.7f;
     floor.ks = 1.0f;
     floor.Ns = 20.0f;
 
 
     // Define cube object lighting properties
-    cube.ka = 1.0f;
-    cube.kd = 0.0f;
+    cube.ka = 0.2f;
+    cube.kd = 0.7f;
     cube.ks = 0.0f;
     cube.Ns = 20.0f;
 
-    // Add light sources
+    //Define light source properties
+
+   // Add light sources
     Light lightSources;
-    lightSources.addDirectionalLight(glm::vec3(1.0f, -1.0f, 0.0f),  // direction
-        glm::vec3(1.0f, 1.0f, 0.0f));  // colour
+    //lightSources.addDirectionalLight(glm::vec3(1.0f, -1.0f, 0.0f),  // direction
+    //    glm::vec3(1.0f, 1.0f, 0.0f));  // colour
+
+
+    lightSources.addSpotLight(glm::vec3(1.0f, 2.0f, 0.0f),          // position
+        glm::vec3(0.0f, 0.0f, -1.0f),         // direction
+        glm::vec3(1.0f, 1.0f, 1.0f),          // colour
+        1.0f, 0.1f, 0.02f,                    // attenuation
+        std::cos(Maths::radians(23.5f)), true);     // cos(phi)
 
     // Cube positions
     glm::vec3 positions[] = {
@@ -207,7 +222,6 @@ int main( void )
     object.angle = wallAngles[0];
     objects.push_back(object);
    
-    //object.name = "wall";
     bool isFlipped = false;
     for (unsigned int i = 1; i <= wallPositions->length() + 1; i++) {
         if (isFlipped) {
@@ -224,7 +238,7 @@ int main( void )
         object.scale = glm::vec3(0.5f, 0.5f, 0.5f);
         object.angle = Maths::radians(wallAngles[i]);
         objects.push_back(object);
-        std::cout << i ;
+   
     }
     // Render loop
     while (!glfwWindowShouldClose(window))
@@ -235,7 +249,7 @@ int main( void )
         previousTime = time;
 
         // Get inputs
-        keyboardInput(window);
+        keyboardInput(window, lightSources);
         mouseInput(window);
 
         // Clear the window
@@ -250,7 +264,8 @@ int main( void )
         glUseProgram(shaderID);
 
         // Send light source properties to the shader
-        lightSources.toShader(shaderID, camera.view);
+        lightSources.toShader(shaderID, camera.view, camera);
+
 
         // Send view matrix to the shader
         glUniformMatrix4fv(glGetUniformLocation(shaderID, "V"), 1, GL_FALSE, &camera.view[0][0]);
@@ -280,10 +295,33 @@ int main( void )
             if (objects[i].name == "floor")
                 floor.draw(shaderID);
             
-        }
+       //Collision System (Needs fixed!)
+        
+            //if(objects[i].name == "wall" || objects[i].name == "wallFlipped"){
+            //glm::vec3 distance = objects[i].position - camera.eye;
+            ////float value = pow(distance.x, 2) + pow(distance.y, 2) + pow(distance.z, 2);
+            //float value = ((objects[i].position.x - camera.eye.x) * (objects[i].position.x - camera.eye.x)) +
+            //    ((objects[i].position.y - camera.eye.y) * (objects[i].position.y - camera.eye.y)) + 
+            //    ((objects[i].position.z - camera.eye.z) * (objects[i].position.z - camera.eye.z));
 
+            //float result = sqrt(value);
+            //std::cout << i;
+            //std::cout << ": ";
+            //std::cout << result;
+            //std::cout << "\n";
+            //if (result < 1) {
+            //   camera.eye = glm::vec3(camera.eye.x - distance.x, camera.eye.y - distance.y, camera.eye.z - distance.z);
+            //   
+            //}
+            //}
+
+           
+       
+        }
         // Draw light sources
+        lightSources.updateLight(camera.eye, camera.front, camera, lightShaderID, sphere);
         lightSources.draw(lightShaderID, camera.view, camera.projection, sphere);
+      
 
         // Swap buffers
         glfwSwapBuffers(window);
@@ -292,6 +330,9 @@ int main( void )
 
     // Cleanup
     cube.deleteBuffers();
+    wall.deleteBuffers();
+    wallFlipped.deleteBuffers();
+    floor.deleteBuffers();
     glDeleteProgram(shaderID);
 
     // Close OpenGL window and terminate GLFW
@@ -299,24 +340,56 @@ int main( void )
     return 0;
 }
 
-
-void keyboardInput(GLFWwindow* window)
+void keyboardInput(GLFWwindow* window, Light& lightSources)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
-    // Move the camera using WSAD keys
+    camera.eye.y = 0;
+    glm::vec3 front = glm::vec3(camera.front.x, 0, camera.front.z);
+    //glm::vec3 jump = glm::vec3(0, 5.0f * sin(3.1415f * T), 0);
+   // camera.eye += 5.0f * deltaTime * jump;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.eye += 5.0f * deltaTime * camera.front;
+        camera.eye += 5.0f * deltaTime * front;
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.eye -= 5.0f * deltaTime * camera.front;
+        camera.eye -= 5.0f * deltaTime * front;
 
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         camera.eye -= 5.0f * deltaTime * camera.right;
-
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.eye += 5.0f * deltaTime * camera.right;
+    float time = glfwGetTime();
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && !lightSources.isOn && !isTurning) {
+        lightSources.isOn = true;
+        isTurning = true;
+        timer = time;
+    }
+        
+    else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && lightSources.isOn && !isTurning) {
+        lightSources.isOn = false;
+        isTurning = true;
+        timer = time;
+    }
+       
+   
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !isJumping)
+    {
+        isJumping = true;
+        t = time;
+    }
+
+    if (isJumping) {
+        if (time - t > 0.2f)
+            isJumping = false;
+
+        camera.eye.y = 1.0f * sin(3.1415f * (time - t));
+
+    }
+    if (isTurning) {
+        if (time - timer > 1.0f)
+            isTurning = false;
+    }
+
 }
 
 void mouseInput(GLFWwindow* window)
