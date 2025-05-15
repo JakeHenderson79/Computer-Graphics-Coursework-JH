@@ -14,6 +14,7 @@
 // Function prototypes
 void keyboardInput(GLFWwindow* window, Light& lightSource);
 void mouseInput(GLFWwindow* window);
+bool containsName(int id);
 
 // Frame timers
 float previousTime = 0.0f;  // time of previous iteration of the loop
@@ -24,7 +25,8 @@ Camera camera(glm::vec3(0.0f, 0.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
 bool isJumping, goDown, isTurning;
 float t, timer;
-
+int count;
+std::string names[9];
 // Object struct
 struct Object
 {
@@ -34,7 +36,7 @@ struct Object
     float angle = 0.0f;
     std::string name;
 };
-
+std::vector<Object> objects;
 int main( void )
 {
     // =========================================================================
@@ -102,14 +104,95 @@ int main( void )
     glUseProgram(shaderID);
 
     // Load models
+
     Model cube("../assets/cube.obj");
+    bool claimedSprite[9];
+    std::vector<Model> cubes;
+    for (int i = 0; i < 9; i++) {
+        cubes.push_back(cube);
+        claimedSprite[i] = false;
+    }
+  
     Model sphere("../assets/sphere.obj");
     Model wall("../assets/plane.obj");
     Model wallFlipped("../assets/plane.obj");
     Model floor("../assets/plane.obj");
+    Model display("../assets/cube.obj");
 
-    // Load the textures
-    cube.addTexture("../assets/crate.jpg", "diffuse");
+    
+
+    for (int i = 0; i < 9; i++) {
+        bool completed = false;
+        while (!completed) {
+            int randomNum = rand() % 9;
+            if (randomNum == 0 && !claimedSprite[0]) {
+                cubes[i].addTexture("../assets/Grey.bmp", "diffuse");
+                claimedSprite[0] = true;
+                names[i] = "grey";
+                completed = true;
+            }
+            if (randomNum == 1 && !claimedSprite[1]) {
+                cubes[i].addTexture("../assets/blue.bmp", "diffuse");
+                claimedSprite[1] = true;
+                names[i] = "blue";
+                completed = true;
+            }
+            if (randomNum == 2 && !claimedSprite[2]) {
+                cubes[i].addTexture("../assets/crate.jpg", "diffuse");
+                claimedSprite[2] = true;
+                names[i] = "crate";
+                completed = true;
+            }
+            if (randomNum == 3 && !claimedSprite[3]) {
+                cubes[i].addTexture("../assets/kratos.png", "diffuse");
+                claimedSprite[3] = true;
+                names[i] = "kratos";
+                completed = true;
+            }
+            if (randomNum == 4 && !claimedSprite[4]) {
+                cubes[i].addTexture("../assets/mario.png", "diffuse");
+                claimedSprite[4] = true;
+                names[i] = "mario";
+                completed = true;
+            }
+            if (randomNum == 5 && !claimedSprite[5]) {
+                cubes[i].addTexture("../assets/Green.bmp", "diffuse");
+                claimedSprite[5] = true;
+                names[i] = "green";
+                completed = true;
+            }
+            if (randomNum == 6 && !claimedSprite[6]) {
+                cubes[i].addTexture("../assets/Red.bmp", "diffuse");
+                claimedSprite[6] = true;
+                names[i] = "red";
+                completed = true;
+            }
+            if (randomNum == 7 && !claimedSprite[7]) {
+                cubes[i].addTexture("../assets/Yellow.bmp", "diffuse");
+                claimedSprite[7] = true;
+                names[i] = "yellow";
+                completed = true;
+            }
+            if (randomNum == 8 && !claimedSprite[8]) {
+                cubes[i].addTexture("../assets/Purple.bmp", "diffuse");
+                claimedSprite[8] = true;
+                names[i] = "purple";
+                completed = true;
+            }
+
+        }
+        cubes[i].addTexture("../assets/neutral_normal.png", "normal");
+        cubes[i].addTexture("../assets/neutral_specular.png", "specular");
+    }
+
+    //// Load the textures
+    //cube.addTexture("../assets/Grey.bmp", "diffuse");
+    //cube.addTexture("../assets/neutral_normal.png", "normal");
+    //cube.addTexture("../assets/neutral_specular.png", "specular");
+
+    display.addTexture("../assets/Grey.bmp", "diffuse");
+    display.addTexture("../assets/neutral_normal.png", "normal");
+    display.addTexture("../assets/neutral_specular.png", "specular");
 
     // Load the textures
     wall.addTexture("../assets/bricks_diffuse.png", "diffuse");
@@ -146,11 +229,24 @@ int main( void )
     floor.Ns = 20.0f;
 
 
+    // Define display object lighting properties
+    display.ka = 0.2f;
+    display.kd = 0.7f;
+    display.ks = 1.0f;
+    display.Ns = 20.0f;
+
     // Define cube object lighting properties
-    cube.ka = 0.2f;
-    cube.kd = 0.7f;
-    cube.ks = 0.0f;
-    cube.Ns = 20.0f;
+    //cube.ka = 0.2f;
+    //cube.kd = 0.7f;
+    //cube.ks = 0.0f;
+    //cube.Ns = 20.0f;
+
+    for (int i = 0; i < 9; i++) {
+        cubes[i].ka = 0.2f;
+        cubes[i].kd = 0.7f;
+        cubes[i].ks = 0.0f;
+        cubes[i].Ns = 20.0f;
+    }
 
     //Define light source properties
 
@@ -166,21 +262,40 @@ int main( void )
         1.0f, 0.1f, 0.02f,                    // attenuation
         std::cos(Maths::radians(23.5f)), true);     // cos(phi)
 
-    // Cube positions
-    glm::vec3 positions[] = {
-        glm::vec3(0.0f,  0.0f,  0.0f),
-        glm::vec3(2.0f,  5.0f, -10.0f),
-        glm::vec3(-3.0f, -2.0f, -3.0f),
-        glm::vec3(-4.0f, -2.0f, -8.0f),
-        glm::vec3(2.0f,  2.0f, -6.0f),
-        glm::vec3(-4.0f,  3.0f, -8.0f),
-        glm::vec3(0.0f, -2.0f, -5.0f),
-        glm::vec3(4.0f,  2.0f, -4.0f),
-        glm::vec3(2.0f,  0.0f, -2.0f),
-        glm::vec3(-1.0f,  1.0f, -2.0f)
+    glm::vec3 lightPositions[] = {
+        glm::vec3(0.0f,1.0f,-0.5f),
+        glm::vec3(0.0f,1.0f,1.0f),
+        glm::vec3(0.0f,1.0f,-2.0f),
+        glm::vec3(4.3f,1.0f,0.0f),
+        glm::vec3(4.3f,1.0f,2.0f),
+        glm::vec3(4.3f,1.0f,-2.0f),
+        glm::vec3(-4.3f,1.0f,0.0f),
+        glm::vec3(-4.3f,1.0f,2.0f),
+        glm::vec3(-4.3f,1.0f,-2.0f)
     };
 
-    //Wall/Floor Positions
+    for (int i = 0; i < 9; i++) {
+        lightSources.addSpotLight(lightPositions[i],          // position
+            glm::vec3(0.0f, -1.0f, 0.0f),         // direction
+            glm::vec3(1.0f, 1.0f, 1.0f),          // colour
+            1.0f, 0.1f, 0.02f,                    // attenuation
+            std::cos(Maths::radians(20.0f)), false);     // cos(phi)
+    }
+
+    // Cube positions
+    glm::vec3 positions[] = {
+     glm::vec3(0.0f,0.0f,-0.5f),
+        glm::vec3(0.0f,0.0f,1.0f),
+        glm::vec3(0.0f,0.0f,-2.0f),
+        glm::vec3(4.3f,0.0f,0.0f),
+        glm::vec3(4.3f,0.0f,2.0f),
+        glm::vec3(4.3f,0.0f,-2.0f),
+        glm::vec3(-4.3f,0.0f,0.0f),
+        glm::vec3(-4.3f,0.0f,2.0f),
+        glm::vec3(-4.3f,0.0f,-2.0f)
+    };
+
+    //Wall/Floor Positions, Rotations and Angle
     glm::vec3 wallPositions[] = {
         glm::vec3(0.0f, -0.85f, 0.0f),
         glm::vec3(0.0f, 0.0f, -5.0f),
@@ -203,18 +318,34 @@ int main( void )
         -180.0f
     };
 
-    // Add teapots to objects vector
-    std::vector<Object> objects;
+    //Display positions and scale
+    glm::vec3 displayPositions[] = {
+        glm::vec3(0.0f,-0.85f,-0.5f),
+        glm::vec3(4.3f,-0.85f,0.0f),
+        glm::vec3(-4.3f,-0.85f,0.0f),
+        glm::vec3(0.0f,-0.85f,4.3f)
+    };
+    glm::vec3 displayScales[] = {
+      glm::vec3(0.5f, 0.5f, 2.5f),
+      glm::vec3(0.5f, 0.5f, 3.0f),
+      glm::vec3(0.5f, 0.5f, 3.0f),
+      glm::vec3(3.0f, 0.5f, 0.5f)
+    };
+
+    // Add cubes to objects vector
+  
     Object object;
-    object.name = "cube";
-    for (unsigned int i = 0; i < 10; i++)
+
+    for (unsigned int i = 0; i < 9; i++)
     {
+        object.name = names[i];
         object.position = positions[i];
         object.rotation = glm::vec3(1.0f, 1.0f, 1.0f);
-        object.scale = glm::vec3(0.5f, 0.5f, 0.5f);
-        object.angle = Maths::radians(20.0f * i);
+        object.scale = glm::vec3(0.1f, 0.1f, 0.1f);
+        object.angle = Maths::radians(26.0f * (i + 1));
         objects.push_back(object);
     }
+
     object.name = "floor";
     object.position = wallPositions[0];
     object.rotation = wallRotation[0];
@@ -240,6 +371,16 @@ int main( void )
         objects.push_back(object);
    
     }
+    object.name = "display";
+    for (int i = 0; i <= displayPositions->length(); i++) {
+        object.position = displayPositions[i];
+        object.rotation = glm::vec3(1.0f, 1.0f, 1.0f);
+        object.scale = displayScales[i];
+        object.angle = wallAngles[0];
+        objects.push_back(object);
+    }
+  
+
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -247,6 +388,7 @@ int main( void )
         float time = glfwGetTime();
         deltaTime = time - previousTime;
         previousTime = time;
+
 
         // Get inputs
         keyboardInput(window, lightSources);
@@ -259,6 +401,7 @@ int main( void )
         // Calculate view and projection matrices
         camera.target = camera.eye + camera.front;
         camera.quaternionCamera();
+        camera.calculateMatrices();
 
         // Activate shader
         glUseProgram(shaderID);
@@ -294,7 +437,13 @@ int main( void )
                 wallFlipped.draw(shaderID);
             if (objects[i].name == "floor")
                 floor.draw(shaderID);
-            
+            if (objects[i].name == "display")
+                display.draw(shaderID);
+            for (int k = 0; k < 9; k++) {
+                if (objects[i].name == names[k]) {
+                    cubes[k].draw(shaderID);
+                }
+            }
        //Collision System (Needs fixed!)
         
             //if(objects[i].name == "wall" || objects[i].name == "wallFlipped"){
@@ -322,6 +471,15 @@ int main( void )
         lightSources.updateLight(camera.eye, camera.front, camera, lightShaderID, sphere);
         lightSources.draw(lightShaderID, camera.view, camera.projection, sphere);
       
+        for (int i = 0; i < objects.size(); i++) {
+            if (containsName(i)) {
+               // objects[i].rotation = glm::vec3(objects[i].rotation.x + 1.0f , objects[i].rotation.y, objects[i].rotation.z);
+                objects[i].angle = objects[i].angle + 0.05f;
+            }
+            if (objects[i].angle > 360) {
+                objects[i].angle = 0;
+            }
+        }
 
         // Swap buffers
         glfwSwapBuffers(window);
@@ -339,15 +497,21 @@ int main( void )
     glfwTerminate();
     return 0;
 }
-
+bool containsName(int id) {
+    for (int i = 0; i < 9; i++) {
+        if (objects[id].name == names[i]) {
+            return true;
+        }
+    }
+    return false;
+}
 void keyboardInput(GLFWwindow* window, Light& lightSources)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     camera.eye.y = 0;
     glm::vec3 front = glm::vec3(camera.front.x, 0, camera.front.z);
-    //glm::vec3 jump = glm::vec3(0, 5.0f * sin(3.1415f * T), 0);
-   // camera.eye += 5.0f * deltaTime * jump;
+
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.eye += 5.0f * deltaTime * front;
 
@@ -358,20 +522,24 @@ void keyboardInput(GLFWwindow* window, Light& lightSources)
         camera.eye -= 5.0f * deltaTime * camera.right;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.eye += 5.0f * deltaTime * camera.right;
-    float time = glfwGetTime();
+
+    float lightTime = glfwGetTime();
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && !lightSources.isOn && !isTurning) {
         lightSources.isOn = true;
         isTurning = true;
-        timer = time;
+        timer = lightTime;
     }
-        
     else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && lightSources.isOn && !isTurning) {
         lightSources.isOn = false;
         isTurning = true;
-        timer = time;
+        timer = lightTime;
     }
-       
-   
+    if (isTurning) {
+        if (lightTime - timer > 0.2f)
+            isTurning = false;
+    }
+    
+    float time = glfwGetTime();
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !isJumping)
     {
         isJumping = true;
@@ -379,16 +547,13 @@ void keyboardInput(GLFWwindow* window, Light& lightSources)
     }
 
     if (isJumping) {
-        if (time - t > 0.2f)
+        if (time - t > 1.0f)
             isJumping = false;
 
         camera.eye.y = 1.0f * sin(3.1415f * (time - t));
 
     }
-    if (isTurning) {
-        if (time - timer > 1.0f)
-            isTurning = false;
-    }
+  
 
 }
 

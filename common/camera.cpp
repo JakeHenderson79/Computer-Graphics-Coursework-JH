@@ -1,5 +1,6 @@
 #include <common/camera.hpp>
 
+
 Camera::Camera(const glm::vec3 Eye, const glm::vec3 Target)
 {
 	eye = Eye;
@@ -8,12 +9,17 @@ Camera::Camera(const glm::vec3 Eye, const glm::vec3 Target)
 
 void Camera::calculateMatrices()
 {
-	calculateCameraVectors();
-	//Calculate the view matrix
-	view = glm::lookAt(eye, eye + front, worldUp);
+	//calculateCameraVectors();
+
+	//view = Maths::LookAt(eye, eye + front, worldUp);
 
 	//Calculate the projection matrix
-	projection = glm::perspective(fov, aspect, near, far);
+	//std::cout << "Libary: ";
+	//std::cout << glm::perspective(fov, aspect, near, far);
+	//std::cout << "\n";
+	//std::cout << "My code: ";
+	//std::cout << Maths::Perspective(fov, aspect, near, far);
+	//std::cout << "\n";
 }
 
 void Camera::calculateCameraVectors()
@@ -35,7 +41,7 @@ void Camera::quaternionCamera()
 	view = orientation.matrix() * Maths::translate(-eye);
 
 	//Calculate the projection matrix
-	projection = glm::perspective(fov, aspect, near, far);
+	projection = Maths::Perspective(fov, aspect, near, far);
 
 	//Calculate camera vectors from view matrix
 	right = glm::vec3(view[0][0], view[1][0], view[2][0]);

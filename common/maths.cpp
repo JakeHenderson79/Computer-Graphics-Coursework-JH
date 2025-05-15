@@ -58,6 +58,60 @@ Quaternion Maths::SLERP(Quaternion q1, Quaternion q2, const float t)
     return q;
 }
 
+glm::mat4 Maths::LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 worldUp)
+{
+    glm::vec3 front = glm::normalize(target - eye);
+    glm::vec3 right = glm::normalize(glm::cross(front, worldUp));
+    glm::vec3 up = glm::cross(front, right);
+
+    glm::mat4 rotateMatrix;
+
+    rotateMatrix[0][0] = right.x;
+    rotateMatrix[1][0] = right.y;
+    rotateMatrix[2][0] = right.z;
+    rotateMatrix[3][0] = 0.0f;
+    rotateMatrix[0][1] = up.x;
+    rotateMatrix[1][1] = up.y;
+    rotateMatrix[2][1] = up.z;
+    rotateMatrix[3][1] = 0.0f;
+    rotateMatrix[0][2] = -front.x;
+    rotateMatrix[1][2] = -front.y;
+    rotateMatrix[2][2] = -front.z;
+    rotateMatrix[3][2] = 0.0f;
+    rotateMatrix[0][3] = 0.0f;
+    rotateMatrix[1][3] = 0.0f;
+    rotateMatrix[2][3] = 0.0f;
+    rotateMatrix[3][3] = 1.0f;
+
+    return rotateMatrix * translate(-eye);
+}
+
+glm::mat4 Maths::Perspective(float fov, float aspect, float near, float far)
+{
+    float top = near * tan(fov/2);
+    float right = aspect * top;
+
+    glm::mat4 result;
+
+    result[0][0] = near / right;
+    result[1][0] = 0.0f;
+    result[2][0] = 0.0f;
+    result[3][0] = 0.0f;
+    result[0][1] = 0.0f;
+    result[1][1] = near / top;
+    result[2][1] = 0.0f;
+    result[3][1] = 0.0f;
+    result[0][2] = 0.0f;
+    result[1][2] = 0.0f;
+    result[2][2] = -((far + near)/(far - near));
+    result[2][3] = -1.0f;
+    result[0][3] = 0.0f;
+    result[1][3] = 0.0f;
+    result[3][2] = -((2 * far * near)/(far - near));
+    result[3][3] = 0.0f;
+    return result;
+}
+
 Quaternion::Quaternion()
 {
 }
