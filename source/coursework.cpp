@@ -454,7 +454,7 @@ int main( void )
                     cubes[k].draw(shaderID);
                 }
             }
-       //Collision System (Needs fixed!)
+       //Collision System 
         
             if(containsName(i)){
             glm::vec3 distance = objects[i].position - camera.eye;
@@ -476,6 +476,26 @@ int main( void )
                    }          
                    lightSources.changeColour(index);
                    stolen[index] = true;
+               }
+               else if (result < 2) {
+                   std::string tempName = objects[i].name;
+                   int index;
+                   for (int k = 0; k < 8; k++) {
+                       if (tempName == names[k]) {
+                           index = k;
+                       }
+                   }
+                   lightSources.nearLights(index);
+               }
+               else if(!stolen[i]) {
+                   std::string tempName = objects[i].name;
+                   int index;
+                   for (int k = 0; k < 8; k++) {
+                       if (tempName == names[k]) {
+                           index = k;
+                       }
+                   }
+                   lightSources.awayLights(index);
                }
             }
 

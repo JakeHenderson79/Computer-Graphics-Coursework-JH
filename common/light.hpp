@@ -47,4 +47,8 @@ public:
     void changeColour(int id);
 
     void changeLights();
+
+    void nearLights(int id);
+
+    void awayLights(int id);
 };

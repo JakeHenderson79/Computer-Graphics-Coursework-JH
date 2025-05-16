@@ -127,5 +127,15 @@ void Light::changeLights()
     }
 }
 
+void Light::nearLights(int id)
+{
+    lightSources[id + 1].colour = glm::vec3(1.0, 1.0, 0.0);
+}
+
+void Light::awayLights(int id)
+{
+    lightSources[id + 1].colour = glm::vec3(1.0, 1.0, 1.0);
+}
+
 
 
