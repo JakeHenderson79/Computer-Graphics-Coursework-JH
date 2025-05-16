@@ -43,4 +43,8 @@ public:
 
     //Move player light
     void updateLight(glm::vec3 position, glm::vec3 rotation, Camera camera, unsigned int shaderID, Model lightModel);
+
+    void changeColour(int id);
+
+    void changeLights();
 };

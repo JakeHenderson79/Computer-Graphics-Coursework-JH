@@ -31,5 +31,13 @@ public:
 
     static glm::mat4 LookAt(glm::vec3 eye, glm::vec3 center, glm::vec3 worldUp);
     static glm::mat4 Perspective(float fov, float aspect, float near, float far);
+
+    static glm::vec3 Cross(glm::vec3 a, glm::vec3 b);
+
+    static float Dot(glm::vec3 a, glm::vec3 b);
+
+    static float Length(glm::vec3 a);
+
+    static glm::vec3 Normalize(glm::vec3 a);
 };
 

@@ -15,6 +15,7 @@
 void keyboardInput(GLFWwindow* window, Light& lightSource);
 void mouseInput(GLFWwindow* window);
 bool containsName(int id);
+bool hasAllStolen();
 
 // Frame timers
 float previousTime = 0.0f;  // time of previous iteration of the loop
@@ -23,10 +24,12 @@ float deltaTime = 0.0f;  // time elapsed since the previous frame
 // Create camera object
 Camera camera(glm::vec3(0.0f, 0.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
-bool isJumping, goDown, isTurning;
-float t, timer;
+bool isJumping, goDown, isTurning, changeColour;
+float t, timer, colourTimer;
 int count;
 std::string names[9];
+bool stolen[9];
+bool alreadySet = false;
 // Object struct
 struct Object
 {
@@ -106,11 +109,12 @@ int main( void )
     // Load models
 
     Model cube("../assets/cube.obj");
-    bool claimedSprite[9];
+    bool claimedSprite[8];
     std::vector<Model> cubes;
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 8; i++) {
         cubes.push_back(cube);
         claimedSprite[i] = false;
+        stolen[i] = false;
     }
   
     Model sphere("../assets/sphere.obj");
@@ -121,10 +125,10 @@ int main( void )
 
     
 
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 8; i++) {
         bool completed = false;
         while (!completed) {
-            int randomNum = rand() % 9;
+            int randomNum = rand() % 8;
             if (randomNum == 0 && !claimedSprite[0]) {
                 cubes[i].addTexture("../assets/Grey.bmp", "diffuse");
                 claimedSprite[0] = true;
@@ -241,7 +245,7 @@ int main( void )
     //cube.ks = 0.0f;
     //cube.Ns = 20.0f;
 
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 8; i++) {
         cubes[i].ka = 0.2f;
         cubes[i].kd = 0.7f;
         cubes[i].ks = 0.0f;
@@ -274,7 +278,7 @@ int main( void )
         glm::vec3(-4.3f,1.0f,-2.0f)
     };
 
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 8; i++) {
         lightSources.addSpotLight(lightPositions[i],          // position
             glm::vec3(0.0f, -1.0f, 0.0f),         // direction
             glm::vec3(1.0f, 1.0f, 1.0f),          // colour
@@ -336,7 +340,7 @@ int main( void )
   
     Object object;
 
-    for (unsigned int i = 0; i < 9; i++)
+    for (unsigned int i = 0; i < 8; i++)
     {
         object.name = names[i];
         object.position = positions[i];
@@ -379,7 +383,13 @@ int main( void )
         object.angle = wallAngles[0];
         objects.push_back(object);
     }
-  
+    //Testing Math functions
+    std::cout << "Libary: ";
+    std::cout << glm::cross(glm::vec3(12,15,3), glm::vec3(4,9,2));
+    std::cout << "\n";
+    std::cout << "My code: ";
+    std::cout << Maths::Cross(glm::vec3(12, 15, 3), glm::vec3(4, 9, 2));
+    std::cout << "\n";
 
     // Render loop
     while (!glfwWindowShouldClose(window))
@@ -439,30 +449,35 @@ int main( void )
                 floor.draw(shaderID);
             if (objects[i].name == "display")
                 display.draw(shaderID);
-            for (int k = 0; k < 9; k++) {
+            for (int k = 0; k < 8; k++) {
                 if (objects[i].name == names[k]) {
                     cubes[k].draw(shaderID);
                 }
             }
        //Collision System (Needs fixed!)
         
-            //if(objects[i].name == "wall" || objects[i].name == "wallFlipped"){
-            //glm::vec3 distance = objects[i].position - camera.eye;
-            ////float value = pow(distance.x, 2) + pow(distance.y, 2) + pow(distance.z, 2);
-            //float value = ((objects[i].position.x - camera.eye.x) * (objects[i].position.x - camera.eye.x)) +
-            //    ((objects[i].position.y - camera.eye.y) * (objects[i].position.y - camera.eye.y)) + 
-            //    ((objects[i].position.z - camera.eye.z) * (objects[i].position.z - camera.eye.z));
+            if(containsName(i)){
+            glm::vec3 distance = objects[i].position - camera.eye;
+            //float value = pow(distance.x, 2) + pow(distance.y, 2) + pow(distance.z, 2);
+            float value = ((objects[i].position.x - camera.eye.x) * (objects[i].position.x - camera.eye.x)) +
+                ((objects[i].position.y - camera.eye.y) * (objects[i].position.y - camera.eye.y)) + 
+                ((objects[i].position.z - camera.eye.z) * (objects[i].position.z - camera.eye.z));
 
-            //float result = sqrt(value);
-            //std::cout << i;
-            //std::cout << ": ";
-            //std::cout << result;
-            //std::cout << "\n";
-            //if (result < 1) {
-            //   camera.eye = glm::vec3(camera.eye.x - distance.x, camera.eye.y - distance.y, camera.eye.z - distance.z);
-            //   
-            //}
-            //}
+            float result = sqrt(value);
+
+               if (result < 1) {
+                   objects[i].position.x = 100;
+                   std::string tempName = objects[i].name;
+                   int index;
+                   for (int k = 0; k < 8; k++) {
+                       if (tempName == names[k]) {
+                           index = k;
+                       }
+                   }          
+                   lightSources.changeColour(index);
+                   stolen[index] = true;
+               }
+            }
 
            
        
@@ -481,6 +496,25 @@ int main( void )
             }
         }
 
+        if (hasAllStolen()) {
+            if (!alreadySet) {
+                alreadySet = true;
+               lightSources.addDirectionalLight(glm::vec3(1.0f, -1.0f, 0.0f),  // direction
+                                                glm::vec3(100.0f, 1.0f, 1.0f));  // colour
+            }
+            float colourTime = glfwGetTime();
+            if (!changeColour) {
+                lightSources.changeLights();
+                changeColour = true;
+                colourTimer = colourTime;
+            }
+            if (changeColour) {
+                if (colourTime - colourTimer > 0.5f)
+                    changeColour = false;
+            }
+          
+        }
+
         // Swap buffers
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -497,8 +531,17 @@ int main( void )
     glfwTerminate();
     return 0;
 }
+
+bool hasAllStolen() {
+    for (int i = 0; i < 8; i++) {
+        if (!stolen[i])
+            return false;
+    }
+    return true;
+}
+
 bool containsName(int id) {
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 8; i++) {
         if (objects[id].name == names[i]) {
             return true;
         }

@@ -22,7 +22,7 @@ float Maths::radians(float angle)
 
 glm::mat4 Maths::rotate(const float& angle, glm::vec3 v)
 {
-    v = glm::normalize(v);
+    v = Maths::Normalize(v);
     float c = cos(0.5f * angle);
     float s = sin(0.5f * angle);
     Quaternion q(c, s * v.x, s * v.y, s * v.z);
@@ -60,9 +60,9 @@ Quaternion Maths::SLERP(Quaternion q1, Quaternion q2, const float t)
 
 glm::mat4 Maths::LookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 worldUp)
 {
-    glm::vec3 front = glm::normalize(target - eye);
-    glm::vec3 right = glm::normalize(glm::cross(front, worldUp));
-    glm::vec3 up = glm::cross(front, right);
+    glm::vec3 front = Maths::Normalize(target - eye);
+    glm::vec3 right = Maths::Normalize(Maths::Cross(front, worldUp));
+    glm::vec3 up = Maths::Cross(front, right);
 
     glm::mat4 rotateMatrix;
 
@@ -109,6 +109,33 @@ glm::mat4 Maths::Perspective(float fov, float aspect, float near, float far)
     result[1][3] = 0.0f;
     result[3][2] = -((2 * far * near)/(far - near));
     result[3][3] = 0.0f;
+    return result;
+}
+
+glm::vec3 Maths::Cross(glm::vec3 a, glm::vec3 b)
+{
+    glm::vec3 result;
+    result.x = ((a.y * b.z) - (a.z * b.y));
+    result.y = ((a.z * b.x) - (a.x * b.z));
+    result.z = ((a.x * b.y) - (a.y * b.x));
+    return result;
+}
+
+float Maths::Dot(glm::vec3 a, glm::vec3 b)
+{
+    float result = (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
+    return result;
+}
+
+float Maths::Length(glm::vec3 a)
+{
+    float result = sqrt((a.x * a.x) + (a.y * a.y) + (a.z * a.z));
+    return result;
+}
+
+glm::vec3 Maths::Normalize(glm::vec3 a)
+{
+    glm::vec3 result = (a) / (Length(a));
     return result;
 }
 

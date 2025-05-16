@@ -111,3 +111,21 @@ void Light::updateLight(glm::vec3 position, glm::vec3 rotation, Camera camera, u
     }
 }
 
+void Light::changeColour(int id)
+{
+    lightSources[id + 1].colour = glm::vec3(5.0, 1.0, 1.0);
+}
+
+void Light::changeLights()
+{
+    if (lightSources[9].colour.x == 100.0f) {
+        lightSources[9].colour.x = 1.0f;
+        lightSources[9].colour.z = 100.0f;
+    }else if (lightSources[9].colour.z == 100.0f) {
+        lightSources[9].colour.x = 100.0f;
+        lightSources[9].colour.z = 1.0f;
+    }
+}
+
+
+
