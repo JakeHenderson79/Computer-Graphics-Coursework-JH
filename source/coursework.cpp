@@ -499,8 +499,9 @@ int main( void )
         if (hasAllStolen()) {
             if (!alreadySet) {
                 alreadySet = true;
-               lightSources.addDirectionalLight(glm::vec3(1.0f, -1.0f, 0.0f),  // direction
-                                                glm::vec3(100.0f, 1.0f, 1.0f));  // colour
+               lightSources.addPointLight(glm::vec3(2.0f, 2.0f, 2.0f),         // position
+                   glm::vec3(100.0f, 1.0f, 1.0f),         // colour
+                   0.0f, 0.1f, 0.02f);
             }
             float colourTime = glfwGetTime();
             if (!changeColour) {
